@@ -60,7 +60,7 @@
       amazon.aws.ec2_group:
         name: ssh-web
         description: allow ssh and http
-        vpc_id: "{{ vpc.vpc.id }}"
+        vpc_id: "{{ vanguard_vpc.vpc.id }}"
         region: us-east-2
         rules:
           - proto: tcp
