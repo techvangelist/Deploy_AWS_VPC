@@ -41,6 +41,7 @@
       amazon.aws.ec2_vpc_igw:
         vpc_id: "{{ vanguard_vpc.vpc.id }}"
         state: present
+        region: us-east-2
       register: igw
 
     - name: create custom route table
@@ -60,7 +61,7 @@
         name: ssh-web
         description: allow ssh and http
         vpc_id: "{{ vpc.vpc.id }}"
-        region: ap-southeast-3
+        region: us-east-2
         rules:
           - proto: tcp
             ports: 22
