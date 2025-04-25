@@ -1,0 +1,67 @@
+---
+- name: Create AWS VPC Environment
+  hosts: "{{ host_list }}"
+
+  tasks:
+    - name: create vpc
+      amazon.aws.ec2_vpc_net:
+        name: vanguard_vpc
+        cidr_block: 10.0.0.0/16
+        region: us-east-2
+      register: vanguard_vpc
+
+    - name: create subnet for first az
+      amazon.aws.ec2_vpc_subnet:
+        vpc_id: "{{ vanguard_vpc.vpc.id }}"
+        state: present
+        az: us-east-2a
+        cidr: 10.0.1.0/28
+      register: az1_useast2
+
+    - name: create subnet for second az
+      amazon.aws.ec2_vpc_subnet:
+        vpc_id: "{{ vanguard_vpc.vpc.id }}"
+        state: present
+        az: us-east-2b
+        cidr: 10.0.2.0/28
+      register: az2_useast2
+
+    - name: create subnet for third az
+      amazon.aws.ec2_vpc_subnet:
+        vpc_id: "{{ vanguard_vpc.vpc.id }}"
+        state: present
+        az: us-east-2c
+        cidr: 10.0.3.0/28
+      register: az3_useast2
+
+    - name: create internet gateway
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ vanguard_vpc.vpc.id }}"
+        state: present
+      register: igw
+
+    - name: create custom route table
+      amazon.aws.ec2_vpc_route_table:
+        vpc_id: "{{ vanguard_vpc.vpc.id }}"
+        region: us-east-2 
+        subnets:
+          - "{{ az1_useast2.subnet.id }}"
+          - "{{ az2_useast2.subnet.id }}"
+          - "{{ az3_useast2.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+
+    - name: create security group
+      amazon.aws.ec2_group:
+        name: ssh-web
+        description: allow ssh and http
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: ap-southeast-3
+        rules:
+          - proto: tcp
+            ports: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            ports: 80
+            cidr_ip: 0.0.0.0/0
